@@ -19,6 +19,7 @@
                         'github-card': '#161b22',
                         'github-text': '#c9d1d9',
                         'github-accent': '#58a6ff',
+                        'live-site': '#238636', /* Custom color for the live site button */
                     }
                 }
             }
@@ -51,7 +52,7 @@
         </h1>
         <p class="text-lg text-gray-400">Dynamically loaded portfolio from the GitHub API.</p>
         <a href="https://github.com/erikotn?tab=repositories" target="_blank" class="inline-flex items-center text-sm font-medium text-github-accent hover:text-white transition duration-200 mt-2">
-            View Profile on GitHub
+            View Source on GitHub Profile
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>
@@ -88,7 +89,7 @@
 
     <script>
         const GITHUB_USERNAME = 'erikotn';
-        const API_URL = `https://api.github.com/users/${GITHUB_USERNAME}/repos`;
+        const API_URL = `https://api.github.com/users/${GITHUB_USERNAME}/repos?sort=updated`;
         const repoListElement = document.getElementById('repo-list');
         const loadingIndicator = document.getElementById('loading-indicator');
         const errorModal = document.getElementById('error-modal');
@@ -132,8 +133,11 @@
             const description = repo.description || 'No description provided.';
             const lastUpdated = new Date(repo.updated_at).toLocaleDateString();
 
+            // *** IMPORTANT CHANGE HERE: Constructing the GitHub Pages URL ***
+            const liveUrl = `https://${GITHUB_USERNAME}.github.io/${repo.name}/`;
+
             return `
-                <div class="bg-github-card p-6 rounded-xl shadow-lg border border-gray-700/50 hover:border-github-accent transition duration-300 flex flex-col">
+                <div class="bg-github-card p-6 rounded-xl shadow-lg border border-gray-700/50 hover:border-live-site transition duration-300 flex flex-col">
                     <div class="flex items-center mb-3">
                         ${createIcon(repoIconPath)}
                         <h2 class="text-xl font-semibold text-white truncate">${repo.name}</h2>
@@ -155,10 +159,13 @@
                         <span class="text-gray-500">Updated: ${lastUpdated}</span>
                     </div>
 
-                    <!-- This is the link element to open the GitHub page -->
-                    <a href="${repo.html_url}" target="_blank" class="mt-auto block w-full text-center bg-github-accent text-github-card font-bold py-2 rounded-lg hover:bg-opacity-90 transition duration-200 shadow-md"
-                       onclick="console.log('Attempting to open: ' + this.href);">
-                        View Repository
+                    <!-- Link now points to the live website (GitHub Pages URL) -->
+                    <a href="${liveUrl}" target="_blank" class="mt-auto block w-full text-center bg-live-site text-white font-bold py-2 rounded-lg hover:bg-opacity-90 transition duration-200 shadow-md">
+                        View Live Website
+                    </a>
+                    
+                    <a href="${repo.html_url}" target="_blank" class="mt-2 block w-full text-center bg-github-card border border-gray-600 text-github-text font-semibold py-2 rounded-lg hover:bg-gray-800 transition duration-200 text-sm">
+                        View Source Code
                     </a>
                 </div>
             `;
@@ -191,6 +198,7 @@
          */
         async function fetchRepositories() {
             try {
+                // Sorting by updated_at is now handled by the API query parameter
                 const response = await fetch(API_URL);
 
                 if (!response.ok) {
@@ -214,9 +222,6 @@
                     repoListElement.innerHTML = `<div class="col-span-full text-center py-10 text-xl text-gray-400">No public repositories found for ${GITHUB_USERNAME}.</div>`;
                     return;
                 }
-
-                // Sort repositories by update date (newest first)
-                repos.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
 
                 // Generate and insert cards
                 const repoCardsHtml = repos.map(createRepoCard).join('');
