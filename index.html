@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic GitHub Portfolio Viewer</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Configure Tailwind for custom font -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'github-bg': '#0d1117',
+                        'github-card': '#161b22',
+                        'github-text': '#c9d1d9',
+                        'github-accent': '#58a6ff',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Load Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <style>
+        /* Custom scrollbar for a modern look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #161b22;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #30363d;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #58a6ff;
+        }
+    </style>
+</head>
+<body class="bg-github-bg text-github-text font-sans min-h-screen p-4 sm:p-8">
+
+    <header class="text-center mb-8 sm:mb-12">
+        <h1 class="text-3xl sm:text-5xl font-extrabold text-white mb-2">
+            erikotn's GitHub Repositories
+        </h1>
+        <p class="text-lg text-gray-400">Dynamically loaded portfolio from the GitHub API.</p>
+        <a href="https://github.com/erikotn?tab=repositories" target="_blank" class="inline-flex items-center text-sm font-medium text-github-accent hover:text-white transition duration-200 mt-2">
+            View Profile on GitHub
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+        </a>
+    </header>
+
+    <!-- Repository Container -->
+    <div id="repo-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+        <!-- Content will be injected here -->
+        <div id="loading-indicator" class="col-span-full text-center py-10 text-xl text-gray-400">
+            <svg class="animate-spin h-8 w-8 text-github-accent mx-auto mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Fetching repositories...
+        </div>
+    </div>
+
+    <!-- Custom Modal for Errors -->
+    <div id="error-modal" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center p-4 z-50">
+        <div class="bg-github-card p-6 sm:p-8 rounded-lg shadow-2xl max-w-sm w-full border border-red-700">
+            <h3 class="text-xl font-bold text-red-400 mb-3 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.398 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                API Error
+            </h3>
+            <p id="error-message" class="text-gray-300 text-sm mb-4"></p>
+            <button onclick="document.getElementById('error-modal').classList.add('hidden')" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 rounded-lg transition duration-200">
+                Close
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const GITHUB_USERNAME = 'erikotn';
+        const API_URL = `https://api.github.com/users/${GITHUB_USERNAME}/repos`;
+        const repoListElement = document.getElementById('repo-list');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const errorModal = document.getElementById('error-modal');
+        const errorMessageElement = document.getElementById('error-message');
+
+        /**
+         * Shows the custom error modal with a specific message.
+         * @param {string} message The error message to display.
+         */
+        function showErrorMessage(message) {
+            errorMessageElement.textContent = message;
+            errorModal.classList.remove('hidden');
+            errorModal.classList.add('flex');
+            loadingIndicator.classList.add('hidden'); // Hide loading indicator if error occurs
+        }
+
+        /**
+         * Creates an SVG icon for the repository card.
+         * @param {string} iconPath SVG path data.
+         * @returns {string} Complete SVG element string.
+         */
+        function createIcon(iconPath) {
+            return `
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5 text-github-accent" viewBox="0 0 24 24" fill="currentColor">
+                    ${iconPath}
+                </svg>
+            `;
+        }
+
+        /**
+         * Creates the HTML structure for a single repository card.
+         * @param {object} repo Repository data object.
+         * @returns {string} The HTML string for the card.
+         */
+        function createRepoCard(repo) {
+            // Icon path for a simple book/repository icon
+            const repoIconPath = '<path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.868 8.165 6.84 9.49l-.018-.016a2 2 0 001.36-.54l-.004.004a2 2 0 011.636 0L12 21.488a2 2 0 001.36.54l-.018.016A9.998 9.998 0 0022 12c0-5.523-4.477-10-10-10zm-1 16H8a2 2 0 01-2-2V8a2 2 0 012-2h3v12zm5-12h-3v12h3a2 2 0 002-2V8a2 2 0 00-2-2z"/>';
+
+            // Formatting details for display
+            const language = repo.language || 'N/A';
+            const description = repo.description || 'No description provided.';
+            const lastUpdated = new Date(repo.updated_at).toLocaleDateString();
+
+            return `
+                <div class="bg-github-card p-6 rounded-xl shadow-lg border border-gray-700/50 hover:border-github-accent transition duration-300 flex flex-col">
+                    <div class="flex items-center mb-3">
+                        ${createIcon(repoIconPath)}
+                        <h2 class="text-xl font-semibold text-white truncate">${repo.name}</h2>
+                    </div>
+
+                    <p class="text-gray-400 text-sm mb-4 flex-grow">${description}</p>
+
+                    <div class="flex items-center text-xs text-gray-500 mb-4 space-x-4">
+                        <span class="flex items-center">
+                            <span class="inline-block w-3 h-3 rounded-full mr-1.5" style="background-color: ${getLanguageColor(language)};"></span>
+                            ${language}
+                        </span>
+                        <span class="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.152a1 1 0 00-.85-.152 1 1 0 00-.73.344l-5.636 5.636a1 1 0 000 1.414L10 16.586V21h4v-4.414l6.242-6.242a1 1 0 000-1.414l-5.636-5.636a1 1 0 00-.73-.344 1 1 0 00-.85.152l-5.636 5.636a1 1 0 000 1.414l-.001.001z" />
+                            </svg>
+                            ${repo.stargazers_count} stars
+                        </span>
+                        <span class="text-gray-500">Updated: ${lastUpdated}</span>
+                    </div>
+
+                    <!-- This is the link element to open the GitHub page -->
+                    <a href="${repo.html_url}" target="_blank" class="mt-auto block w-full text-center bg-github-accent text-github-card font-bold py-2 rounded-lg hover:bg-opacity-90 transition duration-200 shadow-md"
+                       onclick="console.log('Attempting to open: ' + this.href);">
+                        View Repository
+                    </a>
+                </div>
+            `;
+        }
+
+        /**
+         * Simple color mapping for common languages (mimicking GitHub)
+         * @param {string} language The programming language name.
+         * @returns {string} A hex color string.
+         */
+        function getLanguageColor(language) {
+            const colors = {
+                'JavaScript': '#f1e05a',
+                'Python': '#3572A5',
+                'HTML': '#e34c26',
+                'CSS': '#563d7c',
+                'TypeScript': '#2b7489',
+                'Shell': '#89e051',
+                'Dart': '#00B4AB',
+                'Rust': '#dea584',
+                'C++': '#f34b7d',
+                'Go': '#00ADD8',
+                'Java': '#b07219',
+            };
+            return colors[language] || '#cccccc'; // Default color for others
+        }
+
+        /**
+         * Main function to fetch and display repositories.
+         */
+        async function fetchRepositories() {
+            try {
+                const response = await fetch(API_URL);
+
+                if (!response.ok) {
+                    // Handle API errors (e.g., rate limiting, user not found)
+                    const errorData = await response.json();
+                    let message = `Failed to load repositories. Status: ${response.status}.`;
+                    if (errorData.message) {
+                        message += ` GitHub message: ${errorData.message}`;
+                    }
+                    if (response.status === 403) {
+                        message += " (Rate limit exceeded for unauthenticated requests. Please try again later.)";
+                    }
+                    showErrorMessage(message);
+                    return;
+                }
+
+                const repos = await response.json();
+                loadingIndicator.remove(); // Remove loading indicator
+
+                if (repos.length === 0) {
+                    repoListElement.innerHTML = `<div class="col-span-full text-center py-10 text-xl text-gray-400">No public repositories found for ${GITHUB_USERNAME}.</div>`;
+                    return;
+                }
+
+                // Sort repositories by update date (newest first)
+                repos.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+
+                // Generate and insert cards
+                const repoCardsHtml = repos.map(createRepoCard).join('');
+                repoListElement.innerHTML = repoCardsHtml;
+
+            } catch (error) {
+                // Handle network errors
+                console.error("Network or parsing error:", error);
+                showErrorMessage(`A network error occurred while fetching data: ${error.message}`);
+            }
+        }
+
+        // Initialize fetching when the window loads
+        window.onload = fetchRepositories;
+    </script>
+</body>
+</html>
+
