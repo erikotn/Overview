@@ -48,9 +48,9 @@
 
     <header class="text-center mb-8 sm:mb-12">
         <h1 class="text-3xl sm:text-5xl font-extrabold text-white mb-2">
-            erikotn's GitHub Repositories
+            erikotn's GitHub Projects
         </h1>
-        <p class="text-lg text-gray-400">Dynamically loaded portfolio from the GitHub API.</p>
+        <p class="text-lg text-gray-400">Dynamically loaded portfolio from the GitHub API, sorted alphabetically.</p>
         <a href="https://github.com/erikotn?tab=repositories" target="_blank" class="inline-flex items-center text-sm font-medium text-github-accent hover:text-white transition duration-200 mt-2">
             View Source on GitHub Profile
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -89,7 +89,10 @@
 
     <script>
         const GITHUB_USERNAME = 'erikotn';
-        const API_URL = `https://api.github.com/users/${GITHUB_USERNAME}/repos?sort=updated`;
+        // Request repos sorted by name from the API for a better base list
+        const API_URL = `https://api.github.com/users/${GITHUB_USERNAME}/repos?sort=full_name`;
+        const REPO_TO_EXCLUDE = 'Overview'; // Repository name to filter out
+
         const repoListElement = document.getElementById('repo-list');
         const loadingIndicator = document.getElementById('loading-indicator');
         const errorModal = document.getElementById('error-modal');
@@ -133,7 +136,7 @@
             const description = repo.description || 'No description provided.';
             const lastUpdated = new Date(repo.updated_at).toLocaleDateString();
 
-            // *** IMPORTANT CHANGE HERE: Constructing the GitHub Pages URL ***
+            // Constructing the GitHub Pages URL: https://USERNAME.github.io/REPOSITORY_NAME/
             const liveUrl = `https://${GITHUB_USERNAME}.github.io/${repo.name}/`;
 
             return `
@@ -159,11 +162,12 @@
                         <span class="text-gray-500">Updated: ${lastUpdated}</span>
                     </div>
 
-                    <!-- Link now points to the live website (GitHub Pages URL) -->
+                    <!-- Link to the live website (GitHub Pages URL) -->
                     <a href="${liveUrl}" target="_blank" class="mt-auto block w-full text-center bg-live-site text-white font-bold py-2 rounded-lg hover:bg-opacity-90 transition duration-200 shadow-md">
                         View Live Website
                     </a>
                     
+                    <!-- Link to the source code on GitHub -->
                     <a href="${repo.html_url}" target="_blank" class="mt-2 block w-full text-center bg-github-card border border-gray-600 text-github-text font-semibold py-2 rounded-lg hover:bg-gray-800 transition duration-200 text-sm">
                         View Source Code
                     </a>
@@ -194,41 +198,44 @@
         }
 
         /**
-         * Main function to fetch and display repositories.
+         * Main function to fetch, filter, sort, and display repositories.
          */
         async function fetchRepositories() {
             try {
-                // Sorting by updated_at is now handled by the API query parameter
                 const response = await fetch(API_URL);
 
                 if (!response.ok) {
-                    // Handle API errors (e.g., rate limiting, user not found)
                     const errorData = await response.json();
                     let message = `Failed to load repositories. Status: ${response.status}.`;
                     if (errorData.message) {
                         message += ` GitHub message: ${errorData.message}`;
                     }
-                    if (response.status === 403) {
-                        message += " (Rate limit exceeded for unauthenticated requests. Please try again later.)";
-                    }
                     showErrorMessage(message);
                     return;
                 }
 
-                const repos = await response.json();
+                let repos = await response.json();
+                
+                // 1. Filter out the specified repository
+                repos = repos.filter(repo => repo.name !== REPO_TO_EXCLUDE);
+
+                // 2. Sort alphabetically by repository name
+                // Although the API request suggests sorting by full_name, we enforce client-side sort
+                // to ensure the final ordering is strictly alphabetical by name.
+                repos.sort((a, b) => a.name.localeCompare(b.name));
+
                 loadingIndicator.remove(); // Remove loading indicator
 
                 if (repos.length === 0) {
-                    repoListElement.innerHTML = `<div class="col-span-full text-center py-10 text-xl text-gray-400">No public repositories found for ${GITHUB_USERNAME}.</div>`;
+                    repoListElement.innerHTML = `<div class="col-span-full text-center py-10 text-xl text-gray-400">No public repositories found (after filtering out '${REPO_TO_EXCLUDE}').</div>`;
                     return;
                 }
 
-                // Generate and insert cards
+                // 3. Generate and insert cards
                 const repoCardsHtml = repos.map(createRepoCard).join('');
                 repoListElement.innerHTML = repoCardsHtml;
 
             } catch (error) {
-                // Handle network errors
                 console.error("Network or parsing error:", error);
                 showErrorMessage(`A network error occurred while fetching data: ${error.message}`);
             }
