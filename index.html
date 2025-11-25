@@ -3,95 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic GitHub Portfolio Viewer</title>
+    <title>Technical Blueprint Portfolio</title>
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Configure Tailwind for custom font and modern color palette -->
+    
+    <!-- Load Unique Fonts: Chivo (Headline) and JetBrains Mono (Technical Details) -->
+    <link href="https://fonts.googleapis.com/css2?family=Chivo:wght@700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
+                        headline: ['Chivo', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
                     },
                     colors: {
-                        'app-bg': '#070A10',      /* Near-Black Background */
-                        'card-bg': '#12151E',     /* Very Dark Card Background */
-                        'text-primary': '#F0F3F5', /* Off-White Text */
-                        'text-secondary': '#AAB8C2', /* Light Gray Text */
-                        'accent-gradient-start': '#8B5CF6', /* Purple */
-                        'accent-gradient-end': '#00E0FF',   /* Cyan */
-                        'live-site': '#10B981',    /* Emerald Green for Live Site */
+                        // Defined in CSS variables for consistency
+                        'base-text': 'var(--base-text)', 
+                        'base-bg': 'var(--base-bg)',
+                        'accent-primary': 'var(--accent-primary)',
+                        'accent-secondary': 'var(--accent-secondary)',
+                        'card-border': 'var(--card-border)',
                     }
                 }
             }
         }
     </script>
-    <!-- Load Inter Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    
     <style>
-        /* Custom scrollbar for a modern look */
-        ::-webkit-scrollbar {
-            width: 8px;
+        /* CSS Variables for Global Consistency */
+        :root {
+            --base-text: #0B2F56;       /* Deep Navy Blue/Codebase Blue */
+            --base-bg: #F8F9FA;         /* Alabaster White */
+            --accent-primary: #00A896;  /* Authoritative Teal (Live Site CTA) */
+            --accent-secondary: #0B2F56;/* Same as text for consistency */
+            --card-border: #D1D5DB;     /* Light Gray Border */
         }
-        ::-webkit-scrollbar-track {
-            background: #12151E;
+
+        /* ---------------------------------------------------- */
+        /* Custom Background Pattern (Noise/Paper Effect) */
+        /* ---------------------------------------------------- */
+        body {
+            background-color: var(--base-bg);
+            color: var(--base-text);
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 250 250' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
         }
-        ::-webkit-scrollbar-thumb {
-            background: #334155;
-            border-radius: 4px;
+
+        /* ---------------------------------------------------- */
+        /* Motion: Staggered Fade-In Animation */
+        /* ---------------------------------------------------- */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #00E0FF;
+        .animate-stagger-fade {
+            animation: fadeInUp 0.6s ease-out forwards;
+            opacity: 0; /* Start hidden */
         }
-        /* Custom gradient text class */
-        .gradient-text {
-            background-image: linear-gradient(90deg, #8B5CF6, #00E0FF);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-fill-color: transparent;
+        
+        /* ---------------------------------------------------- */
+        /* Typography Styling */
+        /* ---------------------------------------------------- */
+        .headline {
+            font-family: 'Chivo', sans-serif;
         }
-        /* Custom glow effect for cards */
-        .card-glow:hover {
-            box-shadow: 0 10px 30px rgba(0, 224, 255, 0.2), 0 0 10px rgba(139, 92, 246, 0.1);
-            transition: all 0.3s ease-in-out;
+        .code-detail {
+            font-family: 'JetBrains Mono', monospace;
         }
     </style>
 </head>
-<body class="bg-app-bg text-text-primary font-sans min-h-screen p-4 sm:p-8 antialiased">
+<body class="min-h-screen p-6 sm:p-12 antialiased">
 
-    <header class="text-center mb-10 sm:mb-16">
-        <h1 class="text-4xl sm:text-7xl font-extrabold tracking-tighter mb-4">
-            <span class="gradient-text">erikotn's Portfolio</span>
+    <header class="text-center mb-12 sm:mb-20">
+        <h1 class="text-5xl sm:text-7xl font-black headline tracking-tight mb-4">
+            <span class="text-base-text">erikotn</span>
+            <span class="text-accent-primary">.dev</span>
         </h1>
-        <p class="text-xl text-text-secondary max-w-2xl mx-auto">
-            A dynamic showcase of projects, fetched and sorted automatically from GitHub.
+        <p class="text-xl text-base-text/80 max-w-3xl mx-auto code-detail">
+            Dynamic Codebase Blueprint — Current public projects.
         </p>
     </header>
 
     <!-- Repository Container -->
     <div id="repo-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
         <!-- Content will be injected here -->
-        <div id="loading-indicator" class="col-span-full text-center py-16 text-2xl text-text-secondary">
-            <svg class="animate-spin h-10 w-10 text-accent-gradient-end mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <div id="loading-indicator" class="col-span-full text-center py-24 text-2xl text-base-text/60">
+            <svg class="animate-spin h-10 w-10 text-accent-primary mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            Loading your dynamic portfolio...
+            Fetching project manifest...
         </div>
     </div>
 
-    <!-- Custom Modal for Errors -->
-    <div id="error-modal" class="fixed inset-0 bg-black bg-opacity-80 hidden items-center justify-center p-4 z-50">
-        <div class="bg-card-bg p-8 rounded-xl shadow-2xl max-w-md w-full border border-red-700">
-            <h3 class="text-2xl font-bold text-red-400 mb-4 flex items-center">
+    <!-- Custom Modal for Errors (Using the new aesthetic) -->
+    <div id="error-modal" class="fixed inset-0 bg-base-text bg-opacity-80 hidden items-center justify-center p-4 z-50">
+        <div class="bg-base-bg p-8 rounded-xl shadow-2xl max-w-md w-full border border-red-600 text-base-text">
+            <h3 class="text-2xl font-bold text-red-600 mb-4 headline flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h18.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                API Error Encountered
+                Execution Error [404]
             </h3>
-            <p id="error-message" class="text-text-secondary text-base mb-6"></p>
-            <button onclick="document.getElementById('error-modal').classList.add('hidden', 'opacity-0'); document.getElementById('error-modal').classList.remove('flex', 'opacity-100')" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-lg transition duration-200 shadow-lg">
-                Close
+            <p id="error-message" class="text-base-text/90 code-detail text-base mb-6"></p>
+            <button onclick="document.getElementById('error-modal').classList.add('hidden', 'opacity-0'); document.getElementById('error-modal').classList.remove('flex', 'opacity-100')" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-lg transition duration-200 shadow-lg headline">
+                Acknowledge and Close
             </button>
         </div>
     </div>
@@ -108,7 +129,7 @@
 
         /**
          * Shows the custom error modal with a specific message.
-         * @param {string} message The error message to display.
+         * (Error modal style updated to match new aesthetic)
          */
         function showErrorMessage(message) {
             errorMessageElement.textContent = message;
@@ -119,18 +140,17 @@
 
         /**
          * Gets the appropriate icon (as an SVG string) based on the primary language.
-         * @param {string} language The programming language name.
-         * @returns {string} Complete SVG element string.
+         * (Icons updated to use the primary accent color)
          */
         function getLanguageIcon(language) {
             // Using Lucide SVG Paths
             const iconMap = {
-                'JavaScript': '<path d="M16 8l-6 6 6 6"/>', // Chevron right
-                'TypeScript': '<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H20a2 2 0 0 1 2 2z"/>', // Folder
+                'JavaScript': '<path d="M12 2v20M5 5l7 7-7 7M19 5l-7 7 7 7"/>', // Code
+                'TypeScript': '<path d="M17 19h-10a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2z"/>', // Square
                 'Python': '<path d="M20.9 13.5a1.5 1.5 0 0 0-.2-2.7l-4.2-2.1c-.8-.4-1.6-.6-2.5-.6H10a4 4 0 0 0 0 8h.5a1.5 1.5 0 0 0 0-3H10a1 1 0 0 1 0-2h4.5a1.5 1.5 0 0 0 1.4-1.9l-2.1-4.2a1.5 1.5 0 0 0-2.7-.2L6.1 10.8a1.5 1.5 0 0 0-.2 2.7l4.2 2.1c.8.4 1.6.6 2.5.6H14a4 4 0 0 0 0-8h-.5a1.5 1.5 0 0 0 0 3H14a1 1 0 0 1 0 2H9.5a1.5 1.5 0 0 0-1.4 1.9l2.1 4.2a1.5 1.5 0 0 0 2.7.2z"/>', // Zap
                 'HTML': '<path d="M12 21.5l-9-2.5V5l9 2.5 9-2.5v14z"/>', // Layout
-                'CSS': '<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2zM9 10h6M9 14h4"/>', // Tablet
-                'Shell': '<path d="M12 2v20M5 5l7 7-7 7M19 5l-7 7 7 7"/>', // Code
+                'CSS': '<path d="M12 2l10 5.5v11L12 22 2 17.5V6.5zM12 11v6"/>', // Hexagon
+                'Shell': '<path d="M13 19l4 4 4-4M3 21h18"/>', // Command
                 'Dart': '<circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 0-4 17.32l4-4M12 22a10 10 0 0 0 4-17.32l-4 4"/>', // Target
                 'C++': '<path d="M12 2v20M5 5l7 7-7 7M19 5l-7 7 7 7"/>', // Code
                 'Java': '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M9 3v18M15 3v18"/>', // Box Select
@@ -140,18 +160,16 @@
 
             const iconPath = iconMap[language] || defaultIcon;
 
-            // Use the gradient start color for the icon
+            // Use the authoritative accent color
             return `
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3 flex-shrink-0 text-accent-gradient-start" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3 flex-shrink-0 text-accent-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     ${iconPath}
                 </svg>
             `;
         }
 
         /**
-         * Simple color mapping for common languages (mimicking GitHub)
-         * @param {string} language The programming language name.
-         * @returns {string} A hex color string.
+         * Simple color mapping for common languages (Updated for the light theme)
          */
         function getLanguageColor(language) {
             const colors = {
@@ -167,57 +185,56 @@
                 'Go': '#00ADD8',
                 'Java': '#B07219',
             };
-            return colors[language] || '#AAB8C2'; // Default secondary text color
+            return colors[language] || '#9CA3AF'; // Default gray
         }
 
         /**
          * Creates the HTML structure for a single repository card.
-         * @param {object} repo Repository data object.
-         * @returns {string} The HTML string for the card.
          */
-        function createRepoCard(repo) {
+        function createRepoCard(repo, index) {
             const language = repo.language || 'N/A';
-            const description = repo.description || 'No description provided for this project.';
+            const description = repo.description || 'No project description.';
             const lastUpdated = new Date(repo.updated_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
             
             const iconSvg = getLanguageIcon(language);
-
-            // Constructing the GitHub Pages URL: https://USERNAME.github.io/REPOSITORY_NAME/
             const liveUrl = `https://${GITHUB_USERNAME}.github.io/${repo.name}/`;
 
+            // Calculate animation delay for the staggered reveal effect
+            const animationDelay = (index * 0.08) + 's';
+
             return `
-                <div class="card-glow bg-card-bg p-6 rounded-xl border border-card-bg transition duration-300 flex flex-col transform hover:translate-y-[-4px] shadow-lg">
+                <div class="animate-stagger-fade bg-white p-6 rounded-xl border border-card-border shadow-md transition duration-300 flex flex-col hover:shadow-xl hover:border-accent-primary transform hover:scale-[1.01]" style="animation-delay: ${animationDelay};">
                     
-                    <div class="flex items-start mb-4">
+                    <div class="flex items-start mb-4 border-b border-card-border pb-4">
                         ${iconSvg}
-                        <div>
-                            <h2 class="text-2xl font-semibold text-text-primary truncate transition duration-150">${repo.name}</h2>
-                            <p class="text-sm text-text-secondary mt-1">Status: ${repo.private ? 'Private' : 'Public'}</p>
+                        <div class="flex-1 min-w-0">
+                            <h2 class="text-2xl font-bold code-detail truncate text-base-text">${repo.name}</h2>
+                            <p class="text-xs text-base-text/60 code-detail mt-1">Status: ${repo.private ? 'Private' : 'Public'}</p>
                         </div>
                     </div>
 
-                    <p class="text-text-secondary text-base mb-6 flex-grow leading-relaxed">${description}</p>
+                    <p class="text-base-text/90 text-sm mb-6 flex-grow leading-relaxed">${description}</p>
 
-                    <div class="flex items-center text-sm text-text-secondary mb-6 justify-between border-t border-card-bg/50 pt-4">
+                    <div class="flex items-center text-xs code-detail text-base-text/70 mb-6 justify-between pt-4">
                         <span class="flex items-center font-medium">
-                            <span class="inline-block w-3 h-3 rounded-full mr-2 flex-shrink-0" style="background-color: ${getLanguageColor(language)};"></span>
+                            <span class="inline-block w-2.5 h-2.5 rounded-full mr-2 flex-shrink-0" style="background-color: ${getLanguageColor(language)};"></span>
                             ${language}
                         </span>
                         <span class="flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-yellow-400" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                            ${repo.stargazers_count} stars
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1 text-yellow-500" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                            ${repo.stargazers_count}
                         </span>
-                        <span class="text-xs text-text-secondary hidden sm:inline">Updated: ${lastUpdated}</span>
+                        <span class="text-xs text-base-text/50 hidden sm:inline">Commit: ${lastUpdated}</span>
                     </div>
 
                     <div class="flex flex-col space-y-3 mt-auto">
-                        <!-- Primary Action: Start App -->
-                        <a href="${liveUrl}" target="_blank" class="block text-center bg-live-site text-white font-bold py-3 rounded-xl hover:bg-opacity-90 transition duration-200 shadow-xl shadow-live-site/30 transform hover:scale-[1.01] active:scale-[0.98] text-base">
+                        <!-- Primary Action: Start App (Teal Accent) -->
+                        <a href="${liveUrl}" target="_blank" class="block text-center bg-accent-primary text-white font-bold py-3 rounded-lg hover:bg-opacity-90 transition duration-200 shadow-md shadow-accent-primary/50 transform hover:scale-[1.005] active:scale-[0.99] code-detail">
                             Start App
                         </a>
                         
-                        <!-- Secondary Action: Source Code (Subtle Link) -->
-                        <a href="${repo.html_url}" target="_blank" class="block text-center text-text-secondary font-medium py-1 text-sm hover:text-accent-gradient-end transition duration-200">
+                        <!-- Secondary Action: Source Code (Subtle Text Link) -->
+                        <a href="${repo.html_url}" target="_blank" class="block text-center text-base-text/70 font-medium py-1 text-xs hover:text-accent-primary transition duration-200 code-detail">
                             View Source Code on GitHub
                         </a>
                     </div>
@@ -231,13 +248,9 @@
         async function fetchRepositories() {
             try {
                 const response = await fetch(API_URL);
-
                 if (!response.ok) {
                     const errorData = await response.json();
-                    let message = `Failed to load repositories. Status: ${response.status}.`;
-                    if (errorData.message) {
-                        message += ` GitHub message: ${errorData.message}`;
-                    }
+                    let message = `[CODE 500] API request failed. Status: ${response.status}. GitHub message: ${errorData.message || 'Unknown error.'}`;
                     showErrorMessage(message);
                     return;
                 }
@@ -253,17 +266,17 @@
                 loadingIndicator.remove(); // Remove loading indicator
 
                 if (repos.length === 0) {
-                    repoListElement.innerHTML = `<div class="col-span-full text-center py-16 text-2xl text-text-secondary">No public repositories found (after filtering out '${REPO_TO_EXCLUDE}').</div>`;
+                    repoListElement.innerHTML = `<div class="col-span-full text-center py-24 text-2xl text-base-text/50">Project list empty. No public repositories found.</div>`;
                     return;
                 }
 
-                // 3. Generate and insert cards
+                // 3. Generate and insert cards with stagger delay applied
                 const repoCardsHtml = repos.map(createRepoCard).join('');
                 repoListElement.innerHTML = repoCardsHtml;
 
             } catch (error) {
                 console.error("Network or parsing error:", error);
-                showErrorMessage(`A network error occurred while fetching data: ${error.message}`);
+                showErrorMessage(`[NETWORK ERROR] A fatal error occurred: ${error.message}`);
             }
         }
 
